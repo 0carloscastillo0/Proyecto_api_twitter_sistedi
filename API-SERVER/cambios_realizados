@@ -1,0 +1,95 @@
+################################################################################################
+		CAMBIOS REALIZADOS PARA QUE LA API FUNCIONE EN 3 SERVIDORES SEPARADOS.
+			(database		backend			frontend)
+################################################################################################
+
+------------------------------------------------------------------------------------------------
+- Para la base de datos (database):
+
+Solo se modifico la direccion de la base de datos a la direccion del servidor.
+Esto se ve reflejado en el archivo mongod.conf (encontrandose en: "cd /etc"), en las siguientes
+lineas: 
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 127.0.0.1, 10.0.0.4
+
+Como se puede ver, se agrego la direccion privada del servidor (10.0.0.4)
+Una vez hecho el cambio, guardar el archivo y ejecutar el comando:
+- sudo systemctl restart mongod
+Para que guarde los cambios realizados.
+
+------------------------------------------------------------------------------------------------
+- Para el backend:
+
+Se utilizaron los mismos archivos de la api-local, solamente se modifico el archivo
+application.properties para que se conecte la base de datos mongodb del otro servidor.
+
+Y se agrego una lineas en el archivo BackendApplication.java, para dar permiso a las CORS,
+es decir, permitir que el servidor del frontend acceda a las consultas (o métricas; API REST) 
+del backend, todo desde el navegador web accediendo al respectivo link (20.201.120.41:8080)
+
+------------------------------------------------------------------------------------------------
+- Para el frontend:
+
+Se utilizaron los mismos archivos de la api-local, solamente se modifico dos componentes ubicados 
+src/views/components/. :
+	- El componente AuthorsTable.vue se agregaron las llamadas a las consultas mediante la 
+	direccion ip del servidor del backend.
+	- EL componente ProjectsTable.vue se realizo lo mismo que en el componente anterior.
+	
+------------------------------------------------------------------------------------------------
+NOTA: Para que los cambios surjan efecto, en cada servidor se debe tener su respectiva red virtual, con los siguientes emparejamientos:
+	- redvirtual-database -- redvirtual-backend
+	- redvirtual-backend -- redvirtual-frontend
+	
+Para comprobar si las redes virtuales estan emparejados, probar en cada servidor el comando ping mas la
+direccion privada del otro servidor (ej: en el servidor del backend: ping <ip privada del frontend>. O bien,
+en el servidor de database: ping <ip privada del backend>. Y así susesivamente).
+
+
+Además, en cada servidor hay que habilitar los respectivos puertos:
+	- En database: puerto 22 (ssh)
+	- En backend: puertos 22 (ssh), 80 (http), 4444 (puerto-backend)
+	- En frontend: puertos 22 (ssh), 80 (http), 8080 (puerto-front-vue), 4444 (puerto-conexion-backend)
+
+
+-----------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+En caso de que el frontend de error al ejecutarse, como este:
+
+
+admin@kali:/media/veracrypt1/themeforest-LSerfC0M-skote-vuejs-admin-dashboard-template/Admin$ npm run serve
+
+> skote@0.1.0 serve /media/veracrypt1/themeforest-LSerfC0M-skote-vuejs-admin-dashboard-template/Admin
+> vue-cli-service serve
+
+sh: 1: vue-cli-service: not found
+npm ERR! code ELIFECYCLE
+npm ERR! syscall spawn
+npm ERR! file sh
+npm ERR! errno ENOENT
+npm ERR! skote@0.1.0 serve: `vue-cli-service serve`
+npm ERR! spawn ENOENT
+npm ERR! 
+npm ERR! Failed at the skote@0.1.0 serve script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /home/admin/.npm/_logs/2020-01-22T19_13_27_378Z-debug.log
+
+
+Ejecutar este comando en el archivo del frontend:
+- npm i @vue/cli-service
+
+
+
+Si sigue dando el mismo error, entonces ejecutar este comando en el archivo del frontend:
+- rm -rf node_modules package-lock.json && npm install
+
+lo que hace es que elimina la carpeta node_modules y el archivo package-lock.json y despues vuelve a
+instalar npm con la version más reciente, agregando la carpeta node_modules y el archivo package-lock.json. Más información en:
+https://stackoverflow.com/questions/59866945/npm-run-server-throws-error-sh-1-vue-cli-service-not-found
+
+
