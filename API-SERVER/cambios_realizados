@@ -2,7 +2,11 @@
 		CAMBIOS REALIZADOS PARA QUE LA API FUNCIONE EN 3 SERVIDORES SEPARADOS.
 			(database		backend			frontend)
 ################################################################################################
-
+Plataforma usada: Microsoft Azure
+Servicios usados
+- 3 servidores
+- 3 redes virtuales
+################################################################################################
 ------------------------------------------------------------------------------------------------
 - Para la base de datos (database):
 
